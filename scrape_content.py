@@ -14,7 +14,6 @@ table = dynamodb_client.Table('themasonnetwork_drudgescrape')
 client = OpenAI(
     api_key = os.environ['OPENAI_API_KEY']
 )
-
 def get_base_url(url):
     parsed_url = urlparse(url)
     base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
@@ -27,7 +26,7 @@ def scrape_raw_content(url):
         'Referer': get_base_url(url),
     })
 
-    response = session.get(url)
+    response = session.get(url, timeout=10)
 
 
     if response.status_code != 200:
@@ -87,17 +86,26 @@ def update_table(table: any, primary_key: tuple, attributes: list):
     print("UpdateItem succeeded:")
     print(response)
 
+def format_article(article):
+    if article["isScrapeContent"]:
+        return -1
+
+    article = scrape_raw_content(article["newsUrl"])
+
+    if article == "scraping_failure" or article == "":
+        return -1
+
+    return format_raw_content(article)
+
 def format_articles(event, context):
     for entry in table.scan()["Items"]:
-        if entry["isScrapeContent"]:
+        try:
+            article = format_article(entry)
+            if article == -1:
+                continue
+        except (TimeoutError, requests.exceptions.Timeout):
+            print("TimeoutError")
             continue
-
-        article = scrape_raw_content(entry["newsUrl"])
-
-        if article == "scraping_failure" or article == "":
-            continue
-
-        article = format_raw_content(article)
 
         update_table(
             table,
@@ -106,4 +114,3 @@ def format_articles(event, context):
         )
 
     return table.scan()
-      

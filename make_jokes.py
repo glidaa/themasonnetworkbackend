@@ -114,17 +114,18 @@ def make_jokes(event, context):
             continue
 
         try:
-            jokes = generate_jokes_list(entry['newsOriginalTitle'], '')['jokes']
+            jokes = generate_jokes_list(entry['newsOriginalTitle'], entry['newsContent'])['jokes']
         except:
             continue
-        for joke, rank in jokes:
+        for item in jokes:
             jokes_table.put_item(Item={
+                "jokeId": str(hash(item['joke'])),
                 "newsId": entry["newsId"],
                 "newsTitle": entry["newsOriginalTitle"],
                 "newsRank": entry["newsRank"],
-                "jokeContent": joke,
-                "jokeRank": rank,
-                "dateCreated": str(datetime.now()),
+                "jokeContent": item['joke'],
+                "jokeRank": item['rank'],
+                "dateCreated": str(datetime.datetime.now()),
                 "creator": "system"
             })
 

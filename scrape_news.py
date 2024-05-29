@@ -38,6 +38,9 @@ def scrap(event, context):
                 if not valid_news_title(link.text):
                     continue
 
+                if table.get_item(Key={"newsId": str(hash(link["href"]))}).get("Item"):
+                    continue
+
                 table.put_item(Item={
                     "newsId": str(hash(link["href"])),
                     "newsOriginalTitle": link.text,

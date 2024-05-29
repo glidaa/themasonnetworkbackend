@@ -1,0 +1,133 @@
+{
+	"info": {
+		"_postman_id": "2ce227f7-d0ac-401d-860a-e5396b0fa6fc",
+		"name": "Themasonnetwork",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27523101"
+	},
+	"item": [
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Add Joke",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"newsId\": \"-3589658753126884906\",\r\n  \"joke\": \"Pope Francis is the straightest man ever\",\r\n  \"jokeRank\": \"6\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://9jihmdbh08.execute-api.us-east-1.amazonaws.com/production/add-joke",
+							"protocol": "https",
+							"host": [
+								"9jihmdbh08",
+								"execute-api",
+								"us-east-1",
+								"amazonaws",
+								"com"
+							],
+							"path": [
+								"production",
+								"add-joke"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit News Title",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"newsId\": \"-2600469770978363203\",\r\n    \"title\": \"New title\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://9jihmdbh08.execute-api.us-east-1.amazonaws.com/production/edit_title",
+							"protocol": "https",
+							"host": [
+								"9jihmdbh08",
+								"execute-api",
+								"us-east-1",
+								"amazonaws",
+								"com"
+							],
+							"path": [
+								"production",
+								"edit_title"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add News Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"newsId\": \"-2600469770978363203\",\r\n    \"image\": \"https://picsum.photos/200/300\"   \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://9jihmdbh08.execute-api.us-east-1.amazonaws.com/production/add-image",
+							"protocol": "https",
+							"host": [
+								"9jihmdbh08",
+								"execute-api",
+								"us-east-1",
+								"amazonaws",
+								"com"
+							],
+							"path": [
+								"production",
+								"add-image"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Get News",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://9jihmdbh08.execute-api.us-east-1.amazonaws.com/production",
+					"protocol": "https",
+					"host": [
+						"9jihmdbh08",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"production"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

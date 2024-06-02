@@ -5,6 +5,7 @@ from bs4.element import Comment
 from openai import OpenAI
 import boto3
 import os
+import json
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -87,7 +88,7 @@ def update_table(table: any, primary_key: tuple, attributes: list):
     print(response)
 
 def format_article(article):
-    if article["isScrapeContent"]:
+    if article["isScrapeContent"] or article["isRender"]:
         return -1
 
     article = scrape_raw_content(article["newsUrl"])
@@ -98,6 +99,7 @@ def format_article(article):
     return format_raw_content(article)
 
 def format_articles(event, context):
+    count = 0
     for entry in table.scan()["Items"]:
         try:
             article = format_article(entry)
@@ -112,5 +114,9 @@ def format_articles(event, context):
             ("newsId", entry["newsId"]),
             [("newsContent", entry["newsContent"], article), ("isScrapeContent", False, True)]
         )
+        count += 1
 
-    return table.scan()
+    return {
+            'statusCode': 200,
+            'body': json.dumps({'message': f'{count} news scraped'})
+        }

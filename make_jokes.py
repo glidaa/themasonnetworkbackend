@@ -109,6 +109,8 @@ def update_table(table: any, primary_key: tuple, attributes: list):
     print(response)
 
 def make_jokes(event, context):
+    news_count = 0
+    jokes_count = 0
     for entry in news_table.scan()["Items"]:
         if entry["isJokesGenearted"]:
             continue
@@ -134,5 +136,10 @@ def make_jokes(event, context):
             ("newsId", entry["newsId"]),
             [("isJokesGenearted", False, True)]
         )
+        news_count += 1
+        jokes_count += len(jokes)
 
-    return jokes_table.scan()
+    return {
+            'statusCode': 200,
+            'body': json.dumps({'message': f'{news_count} news processed, {jokes_count} jokes generated'})
+    }

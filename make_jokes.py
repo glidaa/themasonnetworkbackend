@@ -7,9 +7,8 @@ from typing import List
 import json
 import datetime
 import boto3
+import hashlib
 import os
-from dotenv import load_dotenv
-load_dotenv()
 
 class OpenAIError(Exception):
     """
@@ -43,11 +42,12 @@ content_generator = ChatOpenAI(
 )
 
 jokes_generation_template = """\
-    You're a late night host. And, you're given a news headlines that you will read as jokes.
-    For each news headline, you will read the headline and then make 4 one-liner jokes about it with a rank.
+    You're a late night host that's famous for his reaction to news. And, you're given a news headlines and content that you will read as jokes.
+    For each news headline, you will read the headline and content and then make 4 one-liner jokes about them with a rank.
     Make all jokes around 100 characters.
     Make the joke without double quotes, "Headline: ", "Joke: " or anything else.
     Here's the headline: {title}
+    Here's the article content: {content}
     Return only the outline as json in the following format: {format_instructions}
 """
 
@@ -62,7 +62,7 @@ def generate_jokes_list(news_title, news_content):
     prompt = ChatPromptTemplate.from_template(jokes_generation_template)
     output_parser = PydanticOutputParser(pydantic_object=JokesList)
     
-    jokes_request = prompt.format_messages(title=news_title, 
+    jokes_request = prompt.format_messages(title=news_title, content=news_content,
                             format_instructions=output_parser.get_format_instructions())
     try:
         with get_openai_callback() as cb:
@@ -112,7 +112,7 @@ def make_jokes(event, context):
     news_count = 0
     jokes_count = 0
     for entry in news_table.scan()["Items"]:
-        if entry["isJokesGenearted"]:
+        if entry["isJokesGenerated"]:
             continue
 
         try:
@@ -121,7 +121,7 @@ def make_jokes(event, context):
             continue
         for item in jokes:
             jokes_table.put_item(Item={
-                "jokeId": str(hash(item['joke'])),
+                "jokeId": hashlib.md5(item['joke'].encode()).hexdigest(),
                 "newsId": entry["newsId"],
                 "newsTitle": entry["newsOriginalTitle"],
                 "newsRank": entry["newsRank"],
@@ -134,7 +134,7 @@ def make_jokes(event, context):
         update_table(
             news_table,
             ("newsId", entry["newsId"]),
-            [("isJokesGenearted", False, True)]
+            [("isJokesGenerated", False, True)]
         )
         news_count += 1
         jokes_count += len(jokes)

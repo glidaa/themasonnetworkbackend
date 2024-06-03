@@ -1,24 +1,27 @@
 import requests
 from bs4 import BeautifulSoup
 import boto3
+from boto3.dynamodb.conditions import Key
 import json
 import urllib3
+import os
 import time
+import hashlib
 from datetime import datetime, timezone
-MAX_ITEMS = 100
+
+MAX_ITEMS = int(os.environ.get('MAX_ITEMS'))
+BASE_UNIX = int(os.environ.get('BASE_UNIX'))
 
 dynamodb_client = boto3.resource('dynamodb')
-table = dynamodb_client.Table('themasonnetwork_drudgescrape')
+news_table = dynamodb_client.Table('themasonnetwork_drudgescrape')
+jokes_table = dynamodb_client.Table('themasonnetwork_jokes')
 
 def valid_news_title(title: str) -> bool:
     return not (title.isupper() or title == '')
 
 def calculate_news_rank():
-    base_unix = 1717167540
     now_unix = int(time.time())
-
-    today_date = datetime.fromtimestamp(base_unix, tz=timezone.utc).date()
-    
+    today_date = datetime.fromtimestamp(BASE_UNIX, tz=timezone.utc).date()
     scrape_date = datetime.fromtimestamp(now_unix, tz=timezone.utc).date()
     
     date_diff = (scrape_date - today_date).days
@@ -27,39 +30,26 @@ def calculate_news_rank():
 
 
 def allow_iframe(url: str) -> bool:
-    if not url:
-        return {
-            'statusCode': 400,
-            'body': json.dumps({'error': 'URL parameter is required'})
-        }
-
     http = urllib3.PoolManager()
     try:
         response = http.request('HEAD', url)
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
-        }
+    except:
+        return False
 
     headers = response.headers
     x_frame_options = headers.get('X-Frame-Options')
     content_security_policy = headers.get('Content-Security-Policy')
 
-    can_render_in_iframe = True
-    if x_frame_options or (content_security_policy and 'frame-ancestors' in content_security_policy):
-        can_render_in_iframe = False
-
-    return can_render_in_iframe
+    return not (x_frame_options or (content_security_policy and 'frame-ancestors' in content_security_policy))
 
 def get_table_size():
-    response = table.scan(
+    response = news_table.scan(
         Select='COUNT'
     )
     return response['Count']
 
 def get_oldest_news_id():
-    response = table.scan(
+    response = news_table.scan(
         ProjectionExpression="newsId, newsRank",
         FilterExpression="attribute_exists(newsRank)"
     )
@@ -67,7 +57,24 @@ def get_oldest_news_id():
     if items:
         oldest_item = min(items, key=lambda x: int(x['newsRank']))
         return oldest_item['newsId']
+    
     return None
+
+def delete_jokes_by_news_id(news_id):
+    # Scan jokes table to find all jokes with the given newsId
+    response = jokes_table.scan(
+        FilterExpression=Key('newsId').eq(news_id)
+    )
+    jokes = response.get('Items', [])
+
+    # Delete each joke
+    with jokes_table.batch_writer() as batch:
+        for joke in jokes:
+            batch.delete_item(
+                Key={
+                    'jokeId': joke['jokeId']
+                }
+            )
 
 def scrap(event, context):
     url = 'https://drudgereport.com/'
@@ -85,26 +92,27 @@ def scrap(event, context):
                 if not valid_news_title(link.text):
                     continue
 
-                if table.get_item(Key={"newsId": str(hash(link["href"]))}).get("Item"):
+                if news_table.get_item(Key={"newsId": hashlib.md5(link["href"].encode()).hexdigest()}).get("Item"):
                     continue
-
 
                 # Check the table size and remove the oldest item if needed
                 table_size = get_table_size()
                 if table_size >= MAX_ITEMS:
                     oldest_news_id = get_oldest_news_id()
                     if oldest_news_id:
-                        table.delete_item(Key={"newsId": oldest_news_id})
+                        news_table.delete_item(Key={"newsId": oldest_news_id})
+                        delete_jokes_by_news_id(oldest_news_id)
+                     
 
-                table.put_item(Item={
-                    "newsId": str(hash(link["href"])),
+                news_table.put_item(Item={
+                    "newsId": hashlib.md5(link["href"].encode()).hexdigest(),
                     "newsOriginalTitle": link.text,
                     "newsUrl": link["href"],
                     "newsContent": "", # Placeholder for content
                     "newsRank": calculate_news_rank(),
                     "newsNewTitle": "", # When admin updates the title
                     "isScrapeContent": False,
-                    "isJokesGenearted": False,
+                    "isJokesGenerated": False,
                     "isRender": allow_iframe(link["href"]),
                     "newsImageURL": "" # Added by admin
                 })

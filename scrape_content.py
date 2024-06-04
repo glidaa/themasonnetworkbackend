@@ -4,16 +4,17 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment
 from openai import OpenAI
 import boto3
-import json
 import os
+import json
+from dotenv import load_dotenv
+load_dotenv()
 
 dynamodb_client = boto3.resource('dynamodb')
 table = dynamodb_client.Table('themasonnetwork_drudgescrape')
 
 client = OpenAI(
-    api_key = os.environ.get('OPENAI_API_KEY')
+    api_key = os.environ['OPENAI_API_KEY']
 )
-
 def get_base_url(url):
     parsed_url = urlparse(url)
     base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
@@ -26,21 +27,20 @@ def scrape_raw_content(url):
         'Referer': get_base_url(url),
     })
 
-    response = session.get(url, timeout=20)
+    try:
+        response = session.get(url, timeout=10)
+        content = response.text
+        soup = BeautifulSoup(content, "html.parser")
 
+        article_body = ""
+        for p in soup.find_all('p'):
+            article_body += p.get_text() + "\n"
 
-    if response.status_code != 200:
-        print(response.status_code)
+        return article_body
+    
+    except Exception as e:
+
         return "scraping_failure"
-
-    content = response.text
-    soup = BeautifulSoup(content, "html.parser")
-
-    article_body = ""
-    for p in soup.find_all('p'):
-        article_body += p.get_text() + "\n"
-
-    return article_body
   
 def format_raw_content(article):
     messages=[
@@ -48,8 +48,8 @@ def format_raw_content(article):
             "role": "user",
             "content": f'''You're given a scraped article from a webpage with miscellaneous garbage from scraping. 
             Rephrase, clean, format the article and return it as plain string without including any garbage, metadata or irrelevant 
-            information. The article MUST be formatted in a way that it can be read by a human and it MUST consist of multiple paragraphs. 
-            The article MUST be less than 4000 characters.
+            information. The article should be formatted in a way that it can be read by a human. 
+            The article should be less than 4000 characters.
             Here's the scraped article: {article}''',
         }
     ]
@@ -105,6 +105,7 @@ def format_articles(event, context):
             if article == -1:
                 continue
         except (TimeoutError, requests.exceptions.Timeout):
+            print("TimeoutError")
             continue
 
         update_table(

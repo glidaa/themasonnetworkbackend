@@ -1,0 +1,7 @@
+python-dotenv
+langchain
+requests
+beautifulsoup4
+boto3
+urllib3
+openai

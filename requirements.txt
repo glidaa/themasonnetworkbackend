@@ -5,3 +5,4 @@ beautifulsoup4
 boto3
 urllib3
 openai
+logger

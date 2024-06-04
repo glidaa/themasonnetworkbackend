@@ -11,6 +11,7 @@ def add_joke(event, context):
     joke_rank = event["jokeRank"]
 
     news = scrape_table.get_item(Key={"newsId": newsId}).get("Item")
+    print(news)
 
     response = jokes_table.put_item(Item={
         "jokeId": str(hash(joke)),
@@ -24,3 +25,13 @@ def add_joke(event, context):
     })
     
     return response
+
+# if __name__ == "__main__":
+#     event = {
+#         "newsId": "2da9a6992446440fb9facd638365ef49",
+#         "joke": "Amazon is really good?",
+#         "jokeRank": 2
+#     }
+#     context="ok"
+#     temp_res = add_joke(event, context)
+#     print(temp_res)

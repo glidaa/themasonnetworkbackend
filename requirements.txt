@@ -6,3 +6,5 @@ boto3
 urllib3
 openai
 logger
+python-dotenv
+sendgrid

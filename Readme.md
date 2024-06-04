@@ -1,16 +1,5 @@
-tables: https://us-east-1.console.aws.amazon.com/dynamodbv2/home?region=us-east-1#tables
-
-make_jokes lamda: https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/make_jokes?tab=code
-
-scrape_news: https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/scrape_news
-
-scrape_content: https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/scrape_content
-
-fetch_news: https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/fetch_news
-
-EventBridge schedulers: https://us-east-1.console.aws.amazon.com/scheduler/home?region=us-east-1#schedules
-
-drudgescrape DynamoDB table: https://us-east-1.console.aws.amazon.com/dynamodbv2/home?region=us-east-1#table?name=themasonnetwork_drudgescrape
-
-apigateway: https://us-east-1.console.aws.amazon.com/apigateway/main/apis/9jihmdbh08/resources?api=9jihmdbh08&region=us-east-1
-
+This is a  news website that scrapes news articles and generates humorous headlines. 
+The website will feature a daily email subscription service, social media sharing capabilities, and an admin panel for managing and editing generated headlines. 
+Additionally, the platform will include functionality for training a machine learning model based on user interactions with the jokes. 
+The implementation will utilize Python for backend processing and Next.js for the frontend interface.
+Objectives

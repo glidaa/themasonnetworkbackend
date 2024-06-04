@@ -29,11 +29,13 @@ def scrape_raw_content(url):
         for p in soup.find_all('p'):
             article_body += p.get_text() + "\n"
 
+        print(article_body)
+
         return article_body
     
     except Exception as e:
-
-        return "scraping_failure"
+        exception_str = "scraping_failure"
+        return exception_str
 
 
 def check_isRender(news_id):
@@ -81,18 +83,18 @@ def update_table(table: any, primary_key: tuple, attributes: list):
     # print(response)
 
 
-def rewrite_content():
-    for entry in table.scan()["Items"]:
+def rewrite_content(event, context):
+    for entry in table.scan()["Items"]: 
         if not (entry["isRender"]):
             newsId = entry["newsId"]
             article_content = scrape_raw_content(entry["newsUrl"])
             update_table(
                 table,
                 ("newsId", newsId),
-                [("isRender", False, True), ("article", None, article_content)]
+                [("isRender", False, True), ("article", entry["article"], article_content)]
             )    
        
-if __name__ == "__main__":
-    temp_res = rewrite_content()
-    print(temp_res)
+# if __name__ == "__main__":
+#     temp_res = rewrite_content()
+#     print(temp_res)
     

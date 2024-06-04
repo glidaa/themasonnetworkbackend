@@ -84,5 +84,4 @@ def web_scraping(website):
     else:
         print("Error fetching the page:", result.status_code)
 
-
 print(lambda_handler({}, {}))

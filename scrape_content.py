@@ -62,7 +62,6 @@ def format_raw_content(article):
     return  chat_completion.choices[0].message.content
 
 def update_table(table: any, primary_key: tuple, attributes: list):
-    # attributes = [(property_name, from, to), ...]
     update_expression = 'SET '
     expression_attribute_names = {}
     expression_attribute_values = {}

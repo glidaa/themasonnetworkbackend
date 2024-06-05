@@ -70,7 +70,7 @@ def get_oldest_news_id():
         return oldest_item['newsId']
     return None
 
-def scrap_news(event, context):
+def scrape_news(event, context):
     url = 'https://drudgereport.com/'
     result = requests.get(url)
 
@@ -118,3 +118,7 @@ def scrap_news(event, context):
     else:
         raise Exception("Error scraping drudgereport", result.status_code)
     
+
+# if __name__ == "__main__":
+#     temp_res = get_oldest_news_id()
+#     print(temp_res)

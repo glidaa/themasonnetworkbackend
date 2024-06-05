@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import boto3
 import logger
-MAX_ITEMS = 100
 
 dynamodb_client = boto3.resource('dynamodb')
 table = dynamodb_client.Table('themasonnetwork_drudgescrape')

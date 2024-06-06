@@ -105,7 +105,7 @@ def scrape_news(event, context):
                     "newsRank": calculate_news_rank(),
                     "newsNewTitle": "", # When admin updates the title
                     "isScrapeContent": False,
-                    "isJokesGenearted": False,
+                    "isJokesGenerated": False,
                     "isRender": allow_iframe(link["href"]),
                     "newsImageURL": "" # Added by admin
                 })

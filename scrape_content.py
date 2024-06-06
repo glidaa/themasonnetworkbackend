@@ -115,6 +115,7 @@ def format_articles(event, context):
         count += 1
 
     return {
-            'statusCode': 200,
-            'body': json.dumps({'message': f'{count} news scraped'})
-        }
+        'statusCode': 200,
+        'body': json.dumps({'message': f'{count} news scraped'})
+    }
+

@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import boto3
 import logger
+import json
 
 dynamodb_client = boto3.resource('dynamodb')
 table = dynamodb_client.Table('themasonnetwork_drudgescrape')
@@ -82,7 +83,8 @@ def update_table(table: any, primary_key: tuple, attributes: list):
     # print(response)
 
 
-def rewrite_content():
+def rewrite_content(event, context):
+    count = 0
     for entry in table.scan()["Items"]: 
         if not (entry["isRender"]):
             newsId = entry["newsId"]
@@ -92,8 +94,8 @@ def rewrite_content():
                 ("newsId", newsId),
                 [("isRender", False, True), ("article", None, article_content)]
             )    
-       
-# if __name__ == "__main__":
-#     temp_res = rewrite_content()
-#     print(temp_res)
-    
+        count += 1
+    return {
+        'statusCode': 200,
+        'body': json.dumps({'message': f'{count} news rewrited'})
+    }

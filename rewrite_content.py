@@ -82,7 +82,7 @@ def update_table(table: any, primary_key: tuple, attributes: list):
     # print(response)
 
 
-def rewrite_content(event, context):
+def rewrite_content():
     for entry in table.scan()["Items"]: 
         if not (entry["isRender"]):
             newsId = entry["newsId"]
@@ -90,7 +90,7 @@ def rewrite_content(event, context):
             update_table(
                 table,
                 ("newsId", newsId),
-                [("isRender", False, True), ("article", entry["article"], article_content)]
+                [("isRender", False, True), ("article", None, article_content)]
             )    
        
 # if __name__ == "__main__":

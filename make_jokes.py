@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 from typing import List
 import json
 import boto3
-import os
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 load_dotenv()

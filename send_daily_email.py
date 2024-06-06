@@ -45,7 +45,7 @@ def send_email(to_emails):
     # Create a string representation of the articles
     articles_html = ""
     for item_article in articles:
-        articles_html += '<div style="margin-bottom: 1rem;"><p style="font-size: 25px;color: #204e01; margin: 0px;">' + item_article["article"] + '</p><a href="' + item_article["url"] + '">' + item_article["url"] + '</a></div>'
+        articles_html += '<div style="margin-bottom: 1rem;"><p style="font-size: 22px;color: #204e01; margin: 0px;">' + item_article["article"] + '</p><a href="' + item_article["url"] + '">' + item_article["url"] + '</a></div>'
 
     final_html_content = html_content.replace("{{tags}}", articles_html)
 

@@ -28,7 +28,7 @@ def get_article_for_emailsending():
         articles.append(article_object)
     return articles
 
-def send_email():
+def send_email(event, context):
     articles = get_article_for_emailsending()
     # # Get the parent directory of the current script
     # parent_dir = os.path.dirname(os.path.abspath(__file__))

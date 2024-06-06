@@ -3,6 +3,7 @@ from sendgrid.helpers.mail import Mail, To
 import boto3
 import os
 from dotenv import load_dotenv
+import json
 
 # Load .env file
 load_dotenv()
@@ -27,7 +28,7 @@ def get_article_for_emailsending():
         articles.append(article_object)
     return articles
 
-def send_email(to_emails):
+def send_email():
     articles = get_article_for_emailsending()
     # # Get the parent directory of the current script
     # parent_dir = os.path.dirname(os.path.abspath(__file__))
@@ -49,28 +50,30 @@ def send_email(to_emails):
 
     final_html_content = html_content.replace("{{tags}}", articles_html)
 
-    message = Mail( 
-                from_email='hello@multilyser.com',
-                to_emails=[To(to_emails), To('hello@multilyser.com')],
-                subject='Summarizing Websites Result',
-                is_multiple=True,
-                html_content=final_html_content
-            )
+    subscribers = get_subscribers()
 
-    try:
-        sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
-        sg = SendGridAPIClient(api_key = sendgrid_api_key)
-        response = sg.send(message)
-        print(response.status_code)
-        print(response.body)
-        print(response.headers)
-            
-        return response.status_code
-    except Exception as e:
-                print(e)    
+    count = 0
 
-# if __name__ == "__main__":
-#     # to_emails = "boskojeftic491@gmail.com"
-#     temp_res = get_subscribers()
-#     print(temp_res)
-    
+    for to_email in subscribers:
+        message = Mail( 
+                    from_email='hello@multilyser.com',
+                    to_emails=[To(to_email), To('hello@multilyser.com')],
+                    subject='Summarizing Websites Result',
+                    is_multiple=True,
+                    html_content=final_html_content
+                )
+
+        try:
+            sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
+            sg = SendGridAPIClient(api_key = sendgrid_api_key)
+            response = sg.send(message)
+            print(f'Email sent to {to_email}\n')
+            count += 1
+        except Exception as e:
+            print(e)    
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps({'message': f'Email sent to {count} users successfully'})
+    }
+

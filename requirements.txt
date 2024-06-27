@@ -8,3 +8,4 @@ openai
 logger
 python-dotenv
 sendgrid
+selenium

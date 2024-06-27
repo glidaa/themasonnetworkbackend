@@ -1,35 +1,52 @@
 import json
 import boto3
+from boto3.dynamodb.conditions import Attr
+from concurrent.futures import ThreadPoolExecutor
+
+# Initialize resources outside the handler
+dynamodb = boto3.resource('dynamodb')
+news_table = dynamodb.Table('themasonnetwork_drudgescrape')
+jokes_table = dynamodb.Table('themasonnetwork_jokes')
 
 def lambda_handler(event, context):
-    dynamodb_client = boto3.resource('dynamodb')
-    news_table = dynamodb_client.Table('themasonnetwork_drudgescrape')
-    jokes_table = dynamodb_client.Table('themasonnetwork_jokes')
-
-    # Filter news
-    # 1- If renderable within iframe
-    # 2- If not renderable within iframe but has content
-    filtered_news = []
-    for item in news_table.scan()["Items"]:
-        if item["isRender"]:
-            filtered_news.append(item)
-        else:
-            if item["isScrapeContent"] and item["newsContent"] != "":
-                filtered_news.append(item)
-    filtered_news.sort(key=lambda x: int(x["newsRank"]), reverse=True)
+    # Define a batch size for scanning news table
+    batch_size = 100
     
-    # Join jokes
-    for news_item in filtered_news:
+    # Use filter expression to scan news table
+    filter_expression = Attr('isRender').eq(True) | (Attr('isScrapeContent').eq(True) & Attr('newsContent').ne(""))
+    
+    # Perform the scan in batches
+    scan_params = {
+        'FilterExpression': filter_expression,
+        'Limit': batch_size
+    }
+    response = news_table.scan(**scan_params)
+    filtered_news = response.get('Items', [])
+    
+    while 'LastEvaluatedKey' in response:
+        scan_params['ExclusiveStartKey'] = response['LastEvaluatedKey']
+        response = news_table.scan(**scan_params)
+        filtered_news.extend(response.get('Items', []))
+    
+    # Sort news items by newsRank
+    filtered_news.sort(key=lambda x: int(x["newsRank"]), reverse=True)
+
+    # Function to fetch jokes for a news item
+    def fetch_jokes(news_item):
         news_id = news_item["newsId"]
-        # Fetch jokes for the current news item
         response = jokes_table.scan(
-            FilterExpression=boto3.dynamodb.conditions.Attr('newsId').eq(news_id)
+            FilterExpression=Attr('newsId').eq(news_id)
         )
         jokes = response.get("Items", [])
-        # Add jokes to the news item
-        news_item["jokes"] = jokes
+        news_item["jokes"] = sorted(jokes, key=lambda x: int(x["jokeRank"]), reverse=True)
+        return news_item
+    
+    # Use ThreadPoolExecutor to fetch jokes in parallel
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        filtered_news = list(executor.map(fetch_jokes, filtered_news))
 
     return {
         'statusCode': 200,
         'body': filtered_news
     }
+    

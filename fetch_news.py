@@ -1,6 +1,7 @@
 import json
 import boto3
 from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Key
 from concurrent.futures import ThreadPoolExecutor
 
 # Initialize resources outside the handler
@@ -34,8 +35,9 @@ def lambda_handler(event, context):
     # Function to fetch jokes for a news item
     def fetch_jokes(news_item):
         news_id = news_item["newsId"]
-        response = jokes_table.scan(
-            FilterExpression=Attr('newsId').eq(news_id)
+        response = jokes_table.query(
+            IndexName='idx_newsId_jokes',
+            KeyConditionExpression=Key('newsId').eq(news_id)
         )
         jokes = response.get("Items", [])
         news_item["jokes"] = sorted(jokes, key=lambda x: int(x["jokeRank"]), reverse=True)

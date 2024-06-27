@@ -5,11 +5,13 @@ import json
 import urllib3
 import time
 from datetime import datetime, timezone
-
-MAX_ITEMS = 100
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+import time
 
 dynamodb_client = boto3.resource('dynamodb')
-table = dynamodb_client.Table('themasonnetwork_drudgescrape')
+table = dynamodb_client.Table('themasonnetwork_drudgescrape_2')
 
 def valid_news_title(title: str) -> bool:
     return not (title.isupper() or title == '')
@@ -72,53 +74,44 @@ def get_oldest_news_id():
 
 def scrape_news(event, context):
     url = 'https://drudgereport.com/'
-    result = requests.get(url)
+    try:
+        option = Options()
+        # option.headless = True
+        option.add_argument("--headless=new") # for Chrome >= 109
 
-    if result.status_code == 200:
-        content = result.text
-        soup = BeautifulSoup(content, "html.parser")
-
-        sections = soup.select("td[align='LEFT']")
-
-        count = 0
-        for section in sections:
-            for i, link in enumerate(section.select("a")):
-                if not valid_news_title(link.text):
+        browser = webdriver.Chrome(options=option)
+        browser.implicitly_wait(5)
+        browser.get(url)
+        
+        html = browser.page_source
+        soup = BeautifulSoup(html, 'html.parser')
+        html = soup.prettify("utf-8")
+        
+        articles_parent_elements = browser.find_elements(By.XPATH, "//td[@align='LEFT']")
+        for articles_parent in articles_parent_elements:
+            articles_elements = articles_parent.find_elements(By.TAG_NAME, 'a')
+            for article_element in articles_elements:
+                article_text = article_element.text
+                article_link = article_element.get_attribute('href')
+                if not valid_news_title(article_text):
                     continue
-
-                if table.get_item(Key={"newsId": str(hash(link["href"]))}).get("Item"):
+                if table.get_item(Key={"newsId": str(hash(article_link))}).get("Item"):
                     continue
-
-                # Check the table size and remove the oldest item if needed
-                table_size = get_table_size()
-                if table_size >= MAX_ITEMS:
-                    oldest_news_id = get_oldest_news_id()
-                    print(oldest_news_id)
-                    if oldest_news_id:
-                        table.delete_item(Key={"newsId": oldest_news_id})
-
                 table.put_item(Item={
-                    "newsId": str(hash(link["href"])),
-                    "newsOriginalTitle": link.text,
-                    "newsUrl": link["href"],
+                    "newsId": str(hash(article_link)),
+                    "newsOriginalTitle": article_text,
+                    "newsUrl": article_link,
                     "newsContent": "", # Placeholder for content
                     "newsRank": calculate_news_rank(),
                     "newsNewTitle": "", # When admin updates the title
                     "isScrapeContent": False,
                     "isJokesGenerated": False,
-                    "isRender": allow_iframe(link["href"]),
-                    "newsImageURL": "" # Added by admin
+                    "isRender": allow_iframe(article_link),
+                    "newsImageURL": "", # Added by admin,
+                    # Timestamp can be sorted in descendent or ascentdent order
+                    "createdTimeStamp": int(time.time())
                 })
-                count += 1
-        print(count)        
-        return {
-            'statusCode': 200,
-            'body': json.dumps({'message': f'{count} news scraped'})
-        }
-    else:
-        raise Exception("Error scraping drudgereport", result.status_code)
-    
-
-# if __name__ == "__main__":
-#     temp_res = get_oldest_news_id()
-#     print(temp_res)
+        print ("successfully scraped new data from Drudge")
+    except Exception as e:
+    # TODO: Should we change to selenium
+        raise Exception("Error scraping drudgereport", str(e))

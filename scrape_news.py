@@ -72,7 +72,7 @@ def get_oldest_news_id():
         return oldest_item['newsId']
     return None
 
-def scrape_news(event, context):
+def scrape_news():
     url = 'https://drudgereport.com/'
     try:
         option = Options()
@@ -115,3 +115,5 @@ def scrape_news(event, context):
     except Exception as e:
     # TODO: Should we change to selenium
         raise Exception("Error scraping drudgereport", str(e))
+
+scrape_news()

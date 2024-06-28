@@ -11,7 +11,7 @@ from selenium.webdriver.common.by import By
 import time
 
 dynamodb_client = boto3.resource('dynamodb')
-table = dynamodb_client.Table('themasonnetwork_drudgescrape_2')
+table = dynamodb_client.Table('themasonnetwork_drudgescrape')
 
 def valid_news_title(title: str) -> bool:
     return not (title.isupper() or title == '')

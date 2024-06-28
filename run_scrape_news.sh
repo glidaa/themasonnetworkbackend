@@ -1,4 +1,4 @@
 #!/bin/bash
 source ./venv/bin/activate
 
-python scrape_news.py
+python /home/admin/themasonnetworkbackend/scrape_news.py

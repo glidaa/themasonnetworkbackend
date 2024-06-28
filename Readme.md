@@ -22,3 +22,6 @@ Objectives
 ## https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/store_email?tab=code
 
 # send_daily_email
+
+# deploying to AWS Lambda
+Must install selenium and webdriver to AWS lambda.

@@ -44,18 +44,15 @@ class NewsScraper(Scraper):
         except Exception as e:
             return False
         headers = response.headers
-        try : 
-            print (headers)
+        if headers:
             x_frame_options = headers.get('X-Frame-Options')
             content_security_policy = headers.get('Content-Security-Policy')
             print ("this can not run")
             can_render_in_iframe = True
             if x_frame_options or (content_security_policy and 'frame-ancestors' in content_security_policy):
                 can_render_in_iframe = False
-
             return can_render_in_iframe
-        except Exception as e:
-            return False
+        return False
     
     def calculate_news_rank(self):
         base_unix = 1717167540

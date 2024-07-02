@@ -9,3 +9,4 @@ logger
 python-dotenv
 sendgrid
 selenium
+langchain-community

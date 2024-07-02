@@ -73,6 +73,9 @@ class Joker():
     def make_jokes(self):
         
         for entry in self.news_table.scan()["Items"]:
+            # This typo cause bad data
+            if "isJokesGenearted" in entry.keys():
+                continue
             if entry["isJokesGenerated"] or entry["isJokesGenearted"]:
                 continue
             try:

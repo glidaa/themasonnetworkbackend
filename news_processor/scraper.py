@@ -38,19 +38,16 @@ class NewsScraper(Scraper):
     # This function allows to see if the article can be rendered    
     def allow_iframe(self, url):
         print ("this has been run")
-        def return_false_branch():
-            return False
-        t = Timer(10.0, return_false_branch)
-        t.start()
         http = urllib3.PoolManager()
         try:
-            response = http.request('HEAD', url)
+            response = http.request('HEAD', url=url,  timeout=2)
+        except TimeoutError:
+            return False
         except Exception as e:
             return False
         headers = response.headers
         x_frame_options = headers.get('X-Frame-Options')
         content_security_policy = headers.get('Content-Security-Policy')
-        print ("this can not run")
         can_render_in_iframe = True
         if x_frame_options or (content_security_policy and 'frame-ancestors' in content_security_policy):
             can_render_in_iframe = False
@@ -80,7 +77,7 @@ class NewsScraper(Scraper):
             if self.drudge_news_table.get_item(Key={"newsId": str(hash(article_link))}).get("Item"):
                 continue
             print (article_title)
-            
+            print (article_link)
             self.drudge_news_table.put_item(Item={
                     "newsId": str(hash(article_link)),
                     "newsOriginalTitle": article_title,

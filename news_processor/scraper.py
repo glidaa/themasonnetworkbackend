@@ -36,6 +36,8 @@ class NewsScraper(Scraper):
 
     # This function allows to see if the article can be rendered    
     def allow_iframe(self, url):
+        print ("this has been run")
+        
         http = urllib3.PoolManager()
         try:
             response = http.request('HEAD', url)
@@ -44,7 +46,7 @@ class NewsScraper(Scraper):
         headers = response.headers
         x_frame_options = headers.get('X-Frame-Options')
         content_security_policy = headers.get('Content-Security-Policy')
-
+        print ("this can not run")
         can_render_in_iframe = True
         if x_frame_options or (content_security_policy and 'frame-ancestors' in content_security_policy):
             can_render_in_iframe = False

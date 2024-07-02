@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from LLMs import LLMModule
 import requests
 from threading import Timer
+from selenium.common.exceptions import TimeoutException
 
 
 class Scraper():
@@ -37,7 +38,6 @@ class NewsScraper(Scraper):
 
     # This function allows to see if the article can be rendered    
     def allow_iframe(self, url):
-        print ("this has been run")
         http = urllib3.PoolManager()
         try:
             response = http.request('HEAD', url=url,  timeout=2)
@@ -131,14 +131,20 @@ class ContentScraper(Scraper):
         
     def scrape_raw_content(self, url):
         # consider moving this to selenium ?
-        self.get_page(url=url,wait_time=1)
-        # TODO: add handler for msn.com pages
-        all_contents_tags = self.browser.find_elements(By.TAG_NAME, 'p')
-        article_body = ""
-        for content_tag in all_contents_tags:
-            article_text = content_tag.text
-            article_body += article_text
-        return article_body
+        try:
+            self.browser.set_page_load_timeout(5)
+            self.get_page(url=url,wait_time=1)
+            # TODO: add handler for msn.com pages
+            all_contents_tags = self.browser.find_elements(By.TAG_NAME, 'p')
+            article_body = ""
+            for content_tag in all_contents_tags:
+                article_text = content_tag.text
+                article_body += article_text
+            return article_body
+        except TimeoutException:
+            self.browser.quit()
+            return ""
+
     
     def update_table(self, table: any, primary_key: tuple, attributes: list):
         update_expression = 'SET '

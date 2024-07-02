@@ -75,6 +75,7 @@ class NewsScraper(Scraper):
                 continue
             if self.drudge_news_table.get_item(Key={"newsId": str(hash(article_link))}).get("Item"):
                 continue
+            print (article_title)
             self.drudge_news_table.put_item(Item={
                     "newsId": str(hash(article_link)),
                     "newsOriginalTitle": article_title,
@@ -89,13 +90,13 @@ class NewsScraper(Scraper):
                     # Timestamp can be sorted in descendent or ascentdent order
                     "createdTimeStamp": int(time.time())
             })
-
     def scrape_news(self):
         self.get_page(url=self.drudge_url, wait_time=2)
         articles_parent_elements = self.browser.find_elements(By.XPATH, "//td[@align='LEFT']")
         for articles_parent in articles_parent_elements:
             articles_elements = articles_parent.find_elements(By.TAG_NAME, 'a')
             self.store_articles(articles_elements)
+        print ("scraped_news succfully")
 
 
 class ContentScraper(Scraper):

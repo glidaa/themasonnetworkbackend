@@ -14,8 +14,8 @@ class Scraper():
     def __init__(self) -> None:
         self.options = Options()
         self.options.add_argument('--headless=new')
-        user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.517 Safari/537.36'
-        self.options.add_argument('user-agent={0}'.format(user_agent))
+        self.options.add_argument('--ignore-ssl-errors=yes')
+        self.options.add_argument('--ignore-certificate-errors')
 
         self.browser = webdriver.Chrome(options=self.options)
     

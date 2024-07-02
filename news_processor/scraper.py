@@ -144,6 +144,8 @@ class ContentScraper(Scraper):
         except TimeoutException:
             self.browser.quit()
             return ""
+        except Exception as e:
+            return ""
 
     
     def update_table(self, table: any, primary_key: tuple, attributes: list):

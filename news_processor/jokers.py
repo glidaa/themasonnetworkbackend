@@ -71,8 +71,9 @@ class Joker():
         return generated_jokes
     
     def make_jokes(self):
+        
         for entry in self.news_table.scan()["Items"]:
-            if entry["isJokesGenerated"]:
+            if entry["isJokesGenerated"] or entry["isJokesGenearted"]:
                 continue
             try:
                 jokes = self.generate_jokes_list(
@@ -100,5 +101,5 @@ class Joker():
             self.update_table(
                 self.news_table,
                 ("newsId", entry["newsId"]),
-                [("isJokesGenearted", False, True)]
+                [("isJokesGenerated", False, True)]
             )

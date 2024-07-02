@@ -45,6 +45,7 @@ class NewsScraper(Scraper):
             return False
         headers = response.headers
         try : 
+            print (headers)
             x_frame_options = headers.get('X-Frame-Options')
             content_security_policy = headers.get('Content-Security-Policy')
             print ("this can not run")

@@ -76,7 +76,7 @@ class Joker():
             # This typo cause bad data
             if "isJokesGenearted" in entry.keys():
                 continue
-            if entry["isJokesGenerated"] or entry["isJokesGenearted"]:
+            if entry["isJokesGenerated"]:
                 continue
             try:
                 jokes = self.generate_jokes_list(

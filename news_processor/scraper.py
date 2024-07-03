@@ -9,6 +9,7 @@ from LLMs import LLMModule
 import requests
 from threading import Timer
 from selenium.common.exceptions import TimeoutException
+from boto3.dynamodb.conditions import Attr
 
 
 class Scraper():
@@ -37,7 +38,7 @@ class NewsScraper(Scraper):
         self.drudge_news_table = self.dynamodb_client.Table('themasonnetwork_drudgescrape')
 
     # This function allows to see if the article can be rendered    
-    def allow_iframe(self, url):
+    def _allow_iframe(self, url):
         http = urllib3.PoolManager()
         try:
             response = http.request('HEAD', url=url,  timeout=2)
@@ -53,7 +54,7 @@ class NewsScraper(Scraper):
             can_render_in_iframe = False
         return can_render_in_iframe
     
-    def calculate_news_rank(self):
+    def _calculate_news_rank(self):
         base_unix = 1717167540
         now_unix = int(time.time())
 
@@ -65,17 +66,27 @@ class NewsScraper(Scraper):
         
         return date_diff + 1  # Adding 1 to make the rank 1-based
     
-    def valid_news_title(self, article_title):
+    def _valid_news_title(self, article_title):
         return not (article_title.isupper() or article_title == '')
+    
+    def _check_duplicate(self, article_link):
+        filter_expression = Attr('newsUrl').eq(article_link)
+        scan_params = {
+            'FilterExpression': filter_expression,
+        }
+        response = self.drudge_news_table.scan(**scan_params)
+        filtered_news = response.get('Items', [])
+        return len(filtered_news) > 0
     
     def store_articles(self, articles_elements):
         for article_element in articles_elements:
             article_title = article_element.text
             article_link = article_element.get_attribute('href')
-            if not self.valid_news_title(article_title):
+            if not self._valid_news_title(article_title):
                 continue
-            if self.drudge_news_table.get_item(Key={"newsId": str(hash(article_link))}).get("Item"):
-                continue
+            if self._check_duplicate(article_link):
+                print ("run continue")
+                continue            
             print (article_title)
             print (article_link)
             self.drudge_news_table.put_item(Item={
@@ -83,11 +94,11 @@ class NewsScraper(Scraper):
                     "newsOriginalTitle": article_title,
                     "newsUrl": article_link,
                     "newsContent": "", # Placeholder for content
-                    "newsRank": self.calculate_news_rank(),
+                    "newsRank": self._calculate_news_rank(),
                     "newsNewTitle": "", # When admin updates the title
                     "isScrapeContent": False,
                     "isJokesGenerated": False,
-                    "isRender": self.allow_iframe(article_link),
+                    "isRender": self._allow_iframe(article_link),
                     "newsImageURL": "", # Added by admin,
                     # Timestamp can be sorted in descendent or ascentdent order
                     "createdTimeStamp": int(time.time())

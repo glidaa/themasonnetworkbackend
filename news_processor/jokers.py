@@ -82,9 +82,6 @@ class Joker():
                 jokes = self.generate_jokes_list(
                     entry['newsOriginalTitle']
                 )['jokes']
-                print (entry)
-                
-                print (jokes)
             except Exception as e:
                 print (e)
                 continue

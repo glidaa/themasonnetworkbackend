@@ -95,7 +95,7 @@ class NewsScraper(Scraper):
                     "newsDrudgeTitle": article_title,
                     "newsUrl": article_link,
                     "newsContent": "", # Placeholder for content
-                    "newsRank": self._calculate_news_rank(),
+                    "newsRank": str(self._calculate_news_rank()),
                     "newsNewTitle": "", # When admin updates the title
                     "isScrapeContent": False,
                     "isJokesGenerated": False,

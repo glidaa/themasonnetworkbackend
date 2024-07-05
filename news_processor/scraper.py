@@ -91,7 +91,8 @@ class NewsScraper(Scraper):
             print (article_link)
             self.drudge_news_table.put_item(Item={
                     "newsId": str(hash(article_link)),
-                    "newsOriginalTitle": article_title,
+                    "newsOriginalTitle": "",
+                    "newsDrudgeTitle": article_title,
                     "newsUrl": article_link,
                     "newsContent": "", # Placeholder for content
                     "newsRank": self._calculate_news_rank(),
@@ -120,15 +121,15 @@ class ContentScraper(Scraper):
         self.drudge_news_table = self.dynamodb_client.Table('themasonnetwork_drudgescrape')
 
     def format_article(self, article):
-        if article["isScrapeContent"] or article["isRender"]:
-            return -1
+        if article["isScrapeContent"] or article["isRender"] == 'true':
+            return -1, -1
 
-        article = self.scrape_raw_content(article["newsUrl"])
+        article, title_article = self.scrape_raw_content(article["newsUrl"])
 
         if article == "scraping_failure" or article == "":
-            return -1
+            return -1, -1
 
-        return self.format_raw_content(article)
+        return self.format_raw_content(article), title_article
 
     def format_raw_content(self, content):
         llm_client = LLMModule()
@@ -143,20 +144,28 @@ class ContentScraper(Scraper):
     def scrape_raw_content(self, url):
         # consider moving this to selenium ?
         try:
-            self.browser.set_page_load_timeout(5)
+            self.browser.set_page_load_timeout(10)
             self.get_page(url=url,wait_time=1)
             # TODO: add handler for msn.com pages
+            title_article = ""
             all_contents_tags = self.browser.find_elements(By.TAG_NAME, 'p')
+            all_title_tags_h1 = self.browser.find_elements(By.TAG_NAME, 'h1')
+            all_title_tags_h2 = self.browser.find_elements(By.TAG_NAME, 'h2')
+            for title_tag in all_title_tags_h1:
+                title_article += title_tag.text
+            for title_tag in all_title_tags_h2:
+                title_article += title_tag.text
+            print (title_article)
             article_body = ""
             for content_tag in all_contents_tags:
                 article_text = content_tag.text
                 article_body += article_text
-            return article_body
+            return (article_body, title_article)
         except TimeoutException:
             self.browser.quit()
-            return ""
+            return ("", "")
         except Exception as e:
-            return ""
+            return ("", "")
 
     
     def update_table(self, table: any, primary_key: tuple, attributes: list):
@@ -186,8 +195,8 @@ class ContentScraper(Scraper):
     def format_articles(self):
         for entry in self.drudge_news_table.scan()["Items"]:
             try:
-                print (entry)
-                article = self.format_article(entry)
+                # print (entry)
+                article, title_article = self.format_article(entry)
                 if article == -1:
                     continue
                 
@@ -198,5 +207,5 @@ class ContentScraper(Scraper):
             self.update_table(
                     self.drudge_news_table,
                     ("newsId", entry["newsId"]),
-                    [("newsContent", entry["newsContent"], article), ("isScrapeContent", False, True)]
+                    [("newsOriginalTitle", entry["newsOriginalTitle"], title_article), ("newsContent", entry["newsContent"], article), ("isScrapeContent", False, True)]
                 )

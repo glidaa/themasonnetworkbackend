@@ -46,7 +46,7 @@ class NewsScraper(Scraper):
         super().__init__()
         self.drudge_url = 'https://drudgereport.com/'
         self.dynamodb_client = boto3.resource('dynamodb')
-        self.drudge_news_table = self.dynamodb_client.Table('themasonnetwork_drudgescrape_2')
+        self.drudge_news_table = self.dynamodb_client.Table('themasonnetwork_drudgescrape')
         self.visited_site = {}
         self.default_a_tags_keywords = ["CALIFORNIA NOTICE", "DO NOT SELL MY INFO", "CUSTOM",
                 "PRIVACY POLICY", "AGENCE FRANCE-PRESSE", "AP TOP", "AP RADIO", "ARAB NEWS", "BLOOMBERG", "DEUTSCHE PRESSE-AGENTUR",
@@ -91,22 +91,6 @@ class NewsScraper(Scraper):
             can_render_in_iframe = False
         return can_render_in_iframe
     
-    def _allow_iframe(self, url):
-        http = urllib3.PoolManager()
-        try:
-            response = http.request('HEAD', url=url,  timeout=2)
-        except TimeoutError:
-            return False
-        except Exception as e:
-            return False
-        headers = response.headers
-        x_frame_options = headers.get('X-Frame-Options')
-        content_security_policy = headers.get('Content-Security-Policy')
-        can_render_in_iframe = True
-        if x_frame_options or (content_security_policy and 'frame-ancestors' in content_security_policy):
-            can_render_in_iframe = False
-        return can_render_in_iframe
-
     def _check_duplicate(self, article_url):
         filter_expression = Attr('newsUrl').eq(article_url)
         scan_params = {
@@ -114,6 +98,7 @@ class NewsScraper(Scraper):
         }
         response = self.drudge_news_table.scan(**scan_params)
         filtered_news = response.get('Items', [])
+        print (filtered_news)
         return len(filtered_news) > 0
 
     def _get_deplicate(self, article_url):
@@ -170,9 +155,9 @@ class NewsScraper(Scraper):
 
     def _scrape_the_article(self, article_url, drudge_title):
         # Manual handle by each pages
-        self.browser.set_page_load_timeout(60)
         self.get_page(url=article_url,wait_time=3)
         self._click_allow(article_url)
+        self.browser.set_page_load_timeout(120)
         html_content = self.browser.page_source
         soup = BeautifulSoup(html_content, 'html.parser')
         # Removing unnecessary tags for minimizing tokens
@@ -232,6 +217,7 @@ class NewsScraper(Scraper):
                     "createdTimeStamp": int(time.time())
             }
             if item["isRender"]:
+                print("item added")
                 self.drudge_news_table.put_item(Item=item)
             else :    
                 article_info = self._scrape_the_article(article_url, drudge_title)

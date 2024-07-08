@@ -157,7 +157,7 @@ class NewsScraper(Scraper):
         # Manual handle by each pages
         self.get_page(url=article_url,wait_time=3)
         self._click_allow(article_url)
-        self.browser.set_page_load_timeout(120)
+        self.browser.set_page_load_timeout(600)
         html_content = self.browser.page_source
         soup = BeautifulSoup(html_content, 'html.parser')
         # Removing unnecessary tags for minimizing tokens

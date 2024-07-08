@@ -170,7 +170,7 @@ class NewsScraper(Scraper):
 
     def _scrape_the_article(self, article_url, drudge_title):
         # Manual handle by each pages
-        self.browser.set_page_load_timeout(30)
+        self.browser.set_page_load_timeout(60)
         self.get_page(url=article_url,wait_time=3)
         self._click_allow(article_url)
         html_content = self.browser.page_source

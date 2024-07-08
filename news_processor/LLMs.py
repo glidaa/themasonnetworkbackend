@@ -1,6 +1,7 @@
 from openai import OpenAI
 import os
 from langchain.prompts import ChatPromptTemplate
+
 import json
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
@@ -34,7 +35,7 @@ class LLMModule:
         )
         self.chat_client = ChatOpenAI(
             temperature=0.25,
-            model_name='gpt-3.5-turbo-1106',
+            model_name='gpt-4-turbo',
         )
         if prompt_template is not None:
             self.prompt_template = ChatPromptTemplate.from_template(
@@ -52,24 +53,21 @@ class LLMModule:
     
         chat_completion = self.llm_client.chat.completions.create(
             messages= messages,
-            model="gpt-3.5-turbo-1106",
+            model="gpt-4-turbo",
         )
         
         return  chat_completion.choices[0].message.content
 
-    # This function is called when promt_template is not None
     def prompt_to_json(
             self,
             input_json,
             output_parser
         ):
         prompt_messages = self.prompt_template.format_messages(**input_json)
-
         try:
             with get_openai_callback() as cb:
                 jokes_response = self.chat_client(prompt_messages)
                 # jokes_response = chat_completion.choices[0].message.content
-                print(jokes_response)
         except Exception as open_ai_exception:
             raise OpenAIError(str(open_ai_exception)).with_traceback(open_ai_exception.__traceback__)
         try:

@@ -25,3 +25,6 @@ Objectives
 
 # deploying to AWS Lambda
 Must install selenium and webdriver to AWS lambda.
+
+
+ok i have moved it all to lightsail turning them all off

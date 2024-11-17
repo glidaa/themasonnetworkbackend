@@ -1,10 +1,13 @@
+import logging
 import boto3
-from LLMs import LLMModule
+from news_processor.LLMs import LLMModule
 from pydantic import BaseModel, Field
 from typing import List
 from langchain.output_parsers import PydanticOutputParser
 import datetime
 
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 class Joke(BaseModel):
   joke: str = Field(description="The one-liner joke generated")
@@ -54,8 +57,7 @@ class Joker():
                 ExpressionAttributeValues=expression_attribute_values,
                 ReturnValues='UPDATED_NEW'
         )
-        print("UpdateItem succeeded:")
-        print(response)
+        logging.info(f"Updated table {table.name} for key {primary_key}: {response}")
 
     
     def generate_jokes_list(self, news_title):
@@ -64,10 +66,12 @@ class Joker():
             "title": news_title,
             "format_instructions": output_parser.get_format_instructions()
         }
+        logging.info(f"Generating jokes for news title: {news_title}")
         generated_jokes = self.LLMModule.prompt_to_json(
             input_json=input_to_llm,
             output_parser=output_parser
         )
+        logging.info(f"Generated jokes: {generated_jokes}")
         return generated_jokes
     
     def make_jokes(self):
@@ -83,10 +87,11 @@ class Joker():
                     entry['newsOriginalTitle']
                 )['jokes']
             except Exception as e:
-                print (e)
+                logging.error(f"Error generating jokes: {str(e)}")
                 continue
             # This is to update table
             for item in jokes:
+                logging.info(f"Storing joke: {item['joke']}")
                 self.jokes_table.put_item(Item={
                     "jokeId": str(hash(item['joke'])),
                     "newsId": entry["newsId"],

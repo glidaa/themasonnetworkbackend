@@ -1,5 +1,14 @@
-.env
-venv
+# Ignore virtual environment
+venv/
+# Ignore Python cache files
+__pycache__/
+# Ignore log files
+*.log
+# Ignore other temporary files
+*.tmp
+*.temp
 *.pyc
 tmn.pem
 tmn.ppk
+# Ignore environment variables
+.env

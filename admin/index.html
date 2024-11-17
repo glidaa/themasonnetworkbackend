@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Viewer</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Database Data Viewer</h1>
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>News ID</th>
+                <th>Original Title</th>
+                <th>Drudge Title</th>
+                <th>URL</th>
+                <th>Content</th>
+                <th>Rank</th>
+                <th>New Title</th>
+                <th>Render</th>
+                <th>Image URL</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+
+    <script>
+        fetch('/api/data')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = ''; // Clear existing data
+                data.forEach(item => {
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = item.newsId || 'N/A';
+                    row.insertCell().textContent = item.newsOriginalTitle || 'N/A';
+                    row.insertCell().textContent = item.newsDrudgeTitle || 'N/A';
+                    row.insertCell().textContent = item.newsUrl || 'N/A';
+                    row.insertCell().textContent = item.newsContent || 'N/A';
+                    row.insertCell().textContent = item.newsRank || 'N/A';
+                    row.insertCell().textContent = item.newsNewTitle || 'N/A';
+                    row.insertCell().textContent = item.isRender ? 'Yes' : 'No';
+                    row.insertCell().textContent = item.newsImageURL || 'N/A';
+                    row.insertCell().textContent = new Date(item.createdTimeStamp * 1000).toLocaleString() || 'N/A';
+                });
+            })
+            .catch(error => console.error('Error loading data:', error));
+    </script>
+</body>
+</html>
